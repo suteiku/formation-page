@@ -1,0 +1,227 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+// ==================== FORMATEURS ====================
+
+model User {
+  id                String      @id @default(cuid())
+  email             String      @unique
+  name              String
+  username          String      @unique
+  password          String
+  
+  // Stripe Connect
+  stripeAccountId   String?     @unique
+  stripeOnboarded   Boolean     @default(false)
+  
+  // Relations
+  formations        Formation[]
+  
+  createdAt         DateTime    @default(now())
+  updatedAt         DateTime    @updatedAt
+  
+  @@index([email])
+  @@index([username])
+}
+
+// ==================== FORMATIONS ====================
+
+model Formation {
+  id                String      @id @default(cuid())
+  slug              String      @unique
+  
+  // Infos basiques
+  title             String
+  pitch             String      
+  description       String      
+  targetAudience    String?     
+  
+  // Prix
+  price             Float
+  currency          String      @default("EUR")
+  
+  // Media
+  coverImage        String
+  coverImageKey     String?
+  primaryColor      String      @default("#6366f1")
+  
+  // Statut
+  published         Boolean     @default(false)
+  
+  // Relations
+  creatorId         String
+  creator           User        @relation(fields: [creatorId], references: [id], onDelete: Cascade)
+  
+  modules           Module[]
+  purchases         Purchase[]
+  testimonials      Testimonial[]
+  
+  // Stats (dénormalisées pour performance)
+  totalStudents     Int         @default(0)
+  totalRevenue      Float       @default(0)
+  
+  createdAt         DateTime    @default(now())
+  updatedAt         DateTime    @updatedAt
+  publishedAt       DateTime?
+  
+  @@index([creatorId])
+  @@index([slug])
+  @@index([published])
+}
+
+// ==================== MODULES ====================
+
+model Module {
+  id                String      @id @default(cuid())
+  title             String
+  description       String?     
+  order             Int
+  
+  formationId       String
+  formation         Formation   @relation(fields: [formationId], references: [id], onDelete: Cascade)
+  
+  lessons           Lesson[]
+  
+  createdAt         DateTime    @default(now())
+  updatedAt         DateTime    @updatedAt
+  
+  @@index([formationId])
+  @@unique([formationId, order])
+}
+
+// ==================== LEÇONS ====================
+
+model Lesson {
+  id                String      @id @default(cuid())
+  title             String
+  description       String?     
+  type              String
+  order             Int
+  
+  // Contenu vidéo (Cloudflare Stream)
+  videoId           String?     // Cloudflare Stream video ID
+  videoUrl          String?     // URL de la vidéo  
+  videoThumbnail    String?
+  duration          Int?        // En secondes
+  
+  // Contenu PDF
+  pdfUrl            String?
+  pdfKey            String?
+  
+  // Contenu lien externe
+  linkUrl           String?
+  
+  // Legacy: unified content field for simple implementations
+  content           String?
+  
+  // Relations
+  moduleId          String
+  module            Module      @relation(fields: [moduleId], references: [id], onDelete: Cascade)
+  
+  progress          Progress[]
+  
+  createdAt         DateTime    @default(now())
+  updatedAt         DateTime    @updatedAt
+  
+  @@index([moduleId])
+  @@unique([moduleId, order])
+}
+
+// Enum removed for SQLite compatibility
+// enum LessonType {
+//   VIDEO
+//   PDF
+//   LINK
+//   TEXT
+// }
+
+// ==================== TÉMOIGNAGES ====================
+
+model Testimonial {
+  id                String      @id @default(cuid())
+  name              String
+  content           String     
+  avatar            String?
+  rating            Int?        @default(5)
+  
+  formationId       String
+  formation         Formation   @relation(fields: [formationId], references: [id], onDelete: Cascade)
+  
+  createdAt         DateTime    @default(now())
+  
+  @@index([formationId])
+}
+
+// ==================== ÉLÈVES ====================
+
+model Student {
+  id                String      @id @default(cuid())
+  email             String      @unique
+  name              String
+  password          String
+  
+  // Relations
+  purchases         Purchase[]
+  progress          Progress[]
+  
+  createdAt         DateTime    @default(now())
+  updatedAt         DateTime    @updatedAt
+  
+  @@index([email])
+}
+
+// ==================== ACHATS ====================
+
+model Purchase {
+  id                String      @id @default(cuid())
+  
+  studentId         String
+  student           Student     @relation(fields: [studentId], references: [id], onDelete: Cascade)
+  
+  formationId       String
+  formation         Formation   @relation(fields: [formationId], references: [id], onDelete: Cascade)
+  
+  // Paiement
+  amount            Float
+  currency          String      @default("EUR")
+  stripePaymentId   String      @unique
+  stripeSessionId   String?     @unique
+  
+  createdAt         DateTime    @default(now())
+  
+  @@unique([studentId, formationId])
+  @@index([studentId])
+  @@index([formationId])
+  @@index([stripePaymentId])
+}
+
+// ==================== PROGRESSION ====================
+
+model Progress {
+  id                String      @id @default(cuid())
+  completed         Boolean     @default(false)
+  watchedDuration   Int         @default(0) // En secondes
+  
+  studentId         String
+  student           Student     @relation(fields: [studentId], references: [id], onDelete: Cascade)
+  
+  lessonId          String
+  lesson            Lesson      @relation(fields: [lessonId], references: [id], onDelete: Cascade)
+  
+  completedAt       DateTime?
+  createdAt         DateTime    @default(now())
+  updatedAt         DateTime    @updatedAt
+  
+  @@unique([studentId, lessonId])
+  @@index([studentId])
+  @@index([lessonId])
+}

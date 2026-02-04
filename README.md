@@ -1,36 +1,140 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# FormationPage MVP
 
-## Getting Started
+Plateforme tout-en-un pour créer et vendre des formations en ligne en moins de 10 minutes.
 
-First, run the development server:
+## 🚀 Fonctionnalités
+
+- **Page de vente automatique** - Générée automatiquement avec votre contenu
+- **Paiements sécurisés** - Stripe + Stripe Connect pour les paiements directs
+- **Espace membre** - Accès dédié pour vos élèves
+- **Suivi de progression** - Vos élèves voient leur avancement
+- **Emails automatiques** - Bienvenue + notifications de vente
+
+## 📦 Stack Technique
+
+- **Frontend**: Next.js 16, React, TypeScript, Tailwind CSS
+- **UI**: Shadcn/ui
+- **Backend**: Next.js API Routes
+- **Database**: PostgreSQL + Prisma 7
+- **Auth**: NextAuth.js
+- **Paiements**: Stripe + Stripe Connect
+- **Emails**: Resend
+
+## 🔧 Installation
+
+### 1. Cloner le projet
+
+```bash
+cd formation-page
+npm install
+```
+
+### 2. Configurer les variables d'environnement
+
+Copier `.env.example` vers `.env.local` et remplir les valeurs:
+
+```bash
+cp .env.example .env.local
+```
+
+Variables requises:
+- `DATABASE_URL` - URL PostgreSQL
+- `NEXTAUTH_SECRET` - Secret pour NextAuth (générer avec `openssl rand -base64 32`)
+- `STRIPE_SECRET_KEY` - Clé secrète Stripe
+- `STRIPE_WEBHOOK_SECRET` - Secret webhook Stripe
+- `RESEND_API_KEY` - Clé API Resend
+
+### 3. Configurer la base de données
+
+```bash
+npx prisma migrate dev --name init
+npx prisma generate
+```
+
+### 4. Lancer le serveur de développement
 
 ```bash
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Ouvrir [http://localhost:3000](http://localhost:3000)
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+## 🏗️ Structure du Projet
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+```
+formation-page/
+├── app/                    # Pages Next.js (App Router)
+│   ├── (auth)/            # Pages auth (login, register)
+│   ├── (dashboard)/       # Dashboard formateur
+│   ├── [username]/[slug]/ # Pages de vente publiques
+│   ├── learn/             # Espace membre élèves
+│   └── api/               # API Routes
+├── components/
+│   ├── ui/                # Composants Shadcn
+│   ├── layout/            # Header, Footer, Sidebar
+│   ├── formation/         # Composants formations
+│   └── shared/            # Composants partagés
+├── lib/
+│   ├── auth.ts            # Config NextAuth
+│   ├── prisma.ts          # Client Prisma
+│   ├── stripe.ts          # Config Stripe
+│   ├── email.ts           # Service email
+│   └── validations/       # Schémas Zod
+└── prisma/
+    └── schema.prisma      # Schéma de la base
+```
 
-## Learn More
+## 📝 Modèle de Données
 
-To learn more about Next.js, take a look at the following resources:
+- **User** - Formateurs/créateurs
+- **Formation** - Formations avec pricing
+- **Module** - Chapitres de formations
+- **Lesson** - Vidéos, PDFs, liens
+- **Student** - Élèves/acheteurs
+- **Purchase** - Achats
+- **Progress** - Suivi de progression
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+## 💰 Monétisation
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+- Commission de 5% sur chaque vente
+- Stripe Connect pour paiements directs aux formateurs
+- Frais de transaction Stripe standards en plus
 
-## Deploy on Vercel
+## 🔐 Sécurité
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+- Authentification JWT via NextAuth
+- Routes protégées par middleware
+- Vérification propriété des formations
+- Webhooks Stripe sécurisés
+- Videos protégées contre téléchargement
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+## 🚀 Déploiement
+
+### Vercel (recommandé)
+
+1. Pousser sur GitHub
+2. Importer sur Vercel
+3. Configurer les variables d'environnement
+4. Déployer
+
+### Variables de production
+
+Ajouter dans Vercel:
+- Toutes les variables de `.env.example`
+- `NEXTAUTH_URL` vers votre domaine
+
+## 📧 Webhooks Stripe
+
+Pour le développement local:
+
+```bash
+stripe listen --forward-to localhost:3000/api/stripe/webhook
+```
+
+Pour production, configurer dans le Dashboard Stripe:
+- Endpoint: `https://votre-domaine.com/api/stripe/webhook`
+- Events: `checkout.session.completed`, `account.updated`
+
+## 📄 License
+
+MIT

@@ -1,7 +1,7 @@
 import Stripe from 'stripe'
 import { prisma } from './prisma'
 
-export const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
+export const stripe = new Stripe(process.env.STRIPE_SECRET_KEY || 'sk_test_build', {
     apiVersion: '2026-01-28.clover',
 })
 

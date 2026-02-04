@@ -1,44 +1,44 @@
 import { Resend } from 'resend'
 
-const resend = new Resend(process.env.RESEND_API_KEY)
+const resend = new Resend(process.env.RESEND_API_KEY || 're_123456789')
 
 interface SendEmailOptions {
-    to: string
-    subject: string
-    html: string
+  to: string
+  subject: string
+  html: string
 }
 
 export async function sendEmail({ to, subject, html }: SendEmailOptions) {
-    try {
-        const data = await resend.emails.send({
-            from: 'FormationPage <noreply@formationpage.com>',
-            to: [to],
-            subject,
-            html,
-        })
-        console.log(`✅ Email envoyé à ${to}`)
-        return data
-    } catch (error) {
-        console.error('❌ Erreur envoi email:', error)
-        throw error
-    }
+  try {
+    const data = await resend.emails.send({
+      from: 'FormationPage <noreply@formationpage.com>',
+      to: [to],
+      subject,
+      html,
+    })
+    console.log(`✅ Email envoyé à ${to}`)
+    return data
+  } catch (error) {
+    console.error('❌ Erreur envoi email:', error)
+    throw error
+  }
 }
 
 // Template: Email de bienvenue pour l'élève
 export function getWelcomeEmailHtml({
-    name,
-    formationTitle,
-    email,
-    tempPassword,
-    loginUrl,
+  name,
+  formationTitle,
+  email,
+  tempPassword,
+  loginUrl,
 }: {
-    name: string
-    formationTitle: string
-    email: string
-    tempPassword: string
-    loginUrl: string
+  name: string
+  formationTitle: string
+  email: string
+  tempPassword: string
+  loginUrl: string
 }) {
-    return `
+  return `
 <!DOCTYPE html>
 <html>
 <head>
@@ -91,23 +91,23 @@ export function getWelcomeEmailHtml({
 
 // Template: Notification de vente pour le formateur
 export function getSaleNotificationHtml({
-    creatorName,
-    formationTitle,
-    studentName,
-    studentEmail,
-    amount,
-    date,
-    dashboardUrl,
+  creatorName,
+  formationTitle,
+  studentName,
+  studentEmail,
+  amount,
+  date,
+  dashboardUrl,
 }: {
-    creatorName: string
-    formationTitle: string
-    studentName: string
-    studentEmail: string
-    amount: number
-    date: string
-    dashboardUrl: string
+  creatorName: string
+  formationTitle: string
+  studentName: string
+  studentEmail: string
+  amount: number
+  date: string
+  dashboardUrl: string
 }) {
-    return `
+  return `
 <!DOCTYPE html>
 <html>
 <head>

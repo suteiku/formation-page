@@ -23,7 +23,7 @@ import { toast } from 'sonner'
 interface Lesson {
     id: string
     title: string
-    type: 'VIDEO' | 'PDF' | 'LINK' | 'TEXT'
+    type: string // 'VIDEO' | 'PDF' | 'LINK' | 'TEXT'
     order: number
     videoUrl?: string | null
     pdfUrl?: string | null
@@ -104,7 +104,7 @@ export default function ContentEditor({ formation }: Props) {
         }
     }
 
-    const addLesson = async (moduleId: string, type: Lesson['type']) => {
+    const addLesson = async (moduleId: string, type: string) => {
         setIsLoading(true)
         try {
             const res = await fetch('/api/lessons', {
@@ -163,7 +163,7 @@ export default function ContentEditor({ formation }: Props) {
         }
     }
 
-    const getLessonIcon = (type: Lesson['type']) => {
+    const getLessonIcon = (type: string) => {
         switch (type) {
             case 'VIDEO':
                 return <PlayCircle className="h-4 w-4" />

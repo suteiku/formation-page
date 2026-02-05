@@ -13,7 +13,9 @@ import {
     BookOpen,
     Eye,
     Users,
+    Palette,
 } from 'lucide-react'
+import { PublishToggle } from '@/components/formations/PublishToggle'
 
 interface Props {
     params: Promise<{ id: string }>
@@ -85,6 +87,16 @@ export default async function FormationDetailPage({ params }: Props) {
                     </div>
                 </div>
                 <div className="flex items-center gap-2">
+                    <PublishToggle
+                        formationId={formation.id}
+                        initialPublished={formation.published}
+                    />
+                    <Link href={`/dashboard/formations/${formation.id}/design`}>
+                        <Button variant="outline">
+                            <Palette className="h-4 w-4 mr-2" />
+                            Design
+                        </Button>
+                    </Link>
                     <Link
                         href={`/${formation.creator.username}/${formation.slug}`}
                         target="_blank"

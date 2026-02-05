@@ -94,7 +94,7 @@ export function FormationCard({ formation, isOwner = false }: FormationCardProps
                             </Button>
                         </Link>
                         <Link
-                            href={`/${formation.creator?.username}/${formation.slug}`}
+                            href={`/${formation.creator?.username || 'creator'}/${formation.slug}`}
                             target="_blank"
                             className="flex-1"
                         >

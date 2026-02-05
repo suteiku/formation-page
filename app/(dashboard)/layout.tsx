@@ -1,4 +1,4 @@
-import { Sidebar } from '@/components/layout/sidebar'
+import { ModernSidebar } from '@/components/layout/modern-sidebar'
 
 export default function DashboardLayout({
     children,
@@ -6,12 +6,12 @@ export default function DashboardLayout({
     children: React.ReactNode
 }) {
     return (
-        <div className="min-h-screen bg-gray-50">
-            <Sidebar />
-            <main className="pl-64">
-                <div className="py-8 px-8">
-                    {children}
-                </div>
+        <div className="min-h-screen bg-white">
+            <div className="fixed inset-y-0 z-50 flex flex-col" style={{ width: '280px' }}>
+                <ModernSidebar />
+            </div>
+            <main style={{ marginLeft: '280px' }}>
+                {children}
             </main>
         </div>
     )

@@ -6,7 +6,7 @@ generator client {
 }
 
 datasource db {
-  provider = "sqlite"
+  provider = "postgresql"
   url      = env("DATABASE_URL")
 }
 
@@ -22,6 +22,11 @@ model User {
   // Stripe Connect
   stripeAccountId   String?     @unique
   stripeOnboarded   Boolean     @default(false)
+  
+  // Stripe Keys
+  stripePublishableKey    String?
+  stripeSecretKey         String?
+  stripeConnectClientId   String?
   
   // Relations
   formations        Formation[]
@@ -53,6 +58,9 @@ model Formation {
   coverImage        String
   coverImageKey     String?
   primaryColor      String      @default("#6366f1")
+  
+  // Template & Design
+  templateConfig    Json?       // Stores template type and customization
   
   // Statut
   published         Boolean     @default(false)

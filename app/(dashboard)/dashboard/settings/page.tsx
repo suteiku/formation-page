@@ -1,179 +1,193 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState } from 'react'
+import { SettingsSection, SettingsInput, SettingsButton, SettingsCollapsible } from '@/components/design-system'
+import { Input } from '@/components/ui/input'
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible'
 import { useSession } from 'next-auth/react'
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card'
-import { Button } from '@/components/ui/button'
-import { Badge } from '@/components/ui/badge'
+import { ChevronDown, Check, CreditCard, User, Globe } from 'lucide-react'
 import { toast } from 'sonner'
-import { Loader2, CheckCircle2, ExternalLink } from 'lucide-react'
+import { Button } from '@/components/ui/button'
 
 export default function SettingsPage() {
     const { data: session } = useSession()
-    const [stripeStatus, setStripeStatus] = useState<{
-        connected: boolean
-        onboarded: boolean
-    } | null>(null)
-    const [isLoading, setIsLoading] = useState(false)
+    const [loading, setLoading] = useState(false)
+    const [showGuide, setShowGuide] = useState(false)
 
-    useEffect(() => {
-        fetchStripeStatus()
-    }, [])
+    const [stripeKeys, setStripeKeys] = useState({
+        publishable: '',
+        secret: '',
+        connectClientId: '',
+    })
 
-    const fetchStripeStatus = async () => {
+    const handleSave = async () => {
+        setLoading(true)
         try {
-            const response = await fetch('/api/stripe/connect')
-            const data = await response.json()
-            setStripeStatus(data)
-        } catch (error) {
-            console.error('Error fetching Stripe status:', error)
-        }
-    }
-
-    const handleConnectStripe = async () => {
-        setIsLoading(true)
-        try {
-            const response = await fetch('/api/stripe/connect', {
+            const res = await fetch('/api/settings/stripe', {
                 method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(stripeKeys),
             })
-            const data = await response.json()
 
-            if (data.url) {
-                window.location.href = data.url
-            } else {
-                toast.error('Erreur lors de la connexion à Stripe')
+            if (res.ok) {
+                toast.success("✅ Sauvegardé", {
+                    description: "Vos clés Stripe sont configurées",
+                })
             }
         } catch (error) {
-            toast.error('Erreur lors de la connexion à Stripe')
+            toast.error("❌ Erreur", {
+                description: "Impossible de sauvegarder",
+            })
         } finally {
-            setIsLoading(false)
+            setLoading(false)
         }
     }
 
     return (
-        <div className="space-y-8 max-w-2xl">
-            <div>
-                <h1 className="text-3xl font-bold text-gray-900">Paramètres</h1>
-                <p className="text-gray-600 mt-1">
-                    Gérez votre compte et vos préférences
+        <div className="p-8 max-w-4xl mx-auto space-y-8">
+            <div className="border-b border-slate-200 pb-6">
+                <h1 className="text-2xl font-semibold text-slate-900">
+                    Paramètres
+                </h1>
+                <p className="text-slate-500 mt-1">
+                    Gérez vos informations et vos intégrations
                 </p>
             </div>
 
-            {/* Profile */}
-            <Card>
-                <CardHeader>
-                    <CardTitle>Profil</CardTitle>
-                    <CardDescription>
-                        Informations de votre compte
-                    </CardDescription>
-                </CardHeader>
-                <CardContent className="space-y-4">
-                    <div className="flex items-center gap-4">
-                        <div className="h-16 w-16 rounded-full bg-indigo-100 flex items-center justify-center">
-                            <span className="text-2xl font-bold text-indigo-600">
-                                {session?.user?.name?.charAt(0).toUpperCase()}
-                            </span>
-                        </div>
-                        <div>
-                            <p className="font-medium text-gray-900">{session?.user?.name}</p>
-                            <p className="text-sm text-gray-500">{session?.user?.email}</p>
-                            <p className="text-sm text-gray-400">
-                                formationpage.com/{session?.user?.username}
-                            </p>
-                        </div>
-                    </div>
-                </CardContent>
-            </Card>
+            {/* COMPTE */}
+            <SettingsSection
+                title="Informations du compte"
+                description="Vos informations personnelles visible sur votre profil"
+                icon={<User className="w-5 h-5" />}
+            >
+                <div className="grid md:grid-cols-2 gap-4">
+                    <SettingsInput label="Nom">
+                        <Input
+                            value={session?.user?.name || ''}
+                            disabled
+                            className="bg-slate-50 border-slate-200 text-slate-500"
+                        />
+                    </SettingsInput>
+                    <SettingsInput label="Email">
+                        <Input
+                            value={session?.user?.email || ''}
+                            disabled
+                            className="bg-slate-50 border-slate-200 text-slate-500"
+                        />
+                    </SettingsInput>
+                </div>
+                <SettingsInput
+                    label="Username"
+                    helperText={`Votre URL : formationpage.com/${session?.user?.username}`}
+                >
+                    <Input
+                        value={session?.user?.username || ''}
+                        disabled
+                        className="bg-slate-50 border-slate-200 text-slate-500"
+                    />
+                </SettingsInput>
+            </SettingsSection>
 
-            {/* Stripe Connect */}
-            <Card>
-                <CardHeader>
-                    <CardTitle>Paiements</CardTitle>
-                    <CardDescription>
-                        Connectez votre compte Stripe pour recevoir les paiements de vos
-                        élèves
-                    </CardDescription>
-                </CardHeader>
-                <CardContent>
-                    {stripeStatus === null ? (
-                        <div className="flex items-center justify-center py-8">
-                            <Loader2 className="h-6 w-6 animate-spin text-gray-400" />
-                        </div>
-                    ) : stripeStatus.onboarded ? (
-                        <div className="flex items-center gap-3 p-4 bg-green-50 rounded-lg">
-                            <CheckCircle2 className="h-6 w-6 text-green-600" />
-                            <div>
-                                <p className="font-medium text-green-800">
-                                    Compte Stripe connecté
-                                </p>
-                                <p className="text-sm text-green-600">
-                                    Vous pouvez recevoir des paiements
-                                </p>
-                            </div>
-                            <Badge className="ml-auto bg-green-600">Actif</Badge>
-                        </div>
-                    ) : stripeStatus.connected ? (
-                        <div className="space-y-4">
-                            <div className="p-4 bg-yellow-50 rounded-lg">
-                                <p className="font-medium text-yellow-800">
-                                    Configuration incomplète
-                                </p>
-                                <p className="text-sm text-yellow-600">
-                                    Terminez la configuration de votre compte Stripe pour recevoir
-                                    des paiements
-                                </p>
-                            </div>
-                            <Button onClick={handleConnectStripe} disabled={isLoading}>
-                                {isLoading ? (
-                                    <>
-                                        <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                                        Chargement...
-                                    </>
-                                ) : (
-                                    <>
-                                        Terminer la configuration
-                                        <ExternalLink className="h-4 w-4 ml-2" />
-                                    </>
-                                )}
-                            </Button>
-                        </div>
-                    ) : (
-                        <div className="space-y-4">
-                            <p className="text-gray-600">
-                                Pour recevoir les paiements de vos élèves, vous devez connecter
-                                votre compte Stripe. C&apos;est gratuit et sécurisé.
-                            </p>
-                            <div className="p-4 bg-gray-50 rounded-lg space-y-2">
-                                <p className="text-sm text-gray-600">
-                                    <strong>Pourquoi Stripe ?</strong>
-                                </p>
-                                <ul className="text-sm text-gray-500 space-y-1">
-                                    <li>✓ Sécurisé et utilisé par des millions d&apos;entreprises</li>
-                                    <li>✓ Vous recevez l&apos;argent directement sur votre compte</li>
-                                    <li>✓ Aucun frais de notre part (seulement les frais Stripe)</li>
-                                </ul>
-                            </div>
-                            <Button
-                                onClick={handleConnectStripe}
-                                className="bg-indigo-600 hover:bg-indigo-700"
-                                disabled={isLoading}
-                            >
-                                {isLoading ? (
-                                    <>
-                                        <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                                        Connexion...
-                                    </>
-                                ) : (
-                                    <>
-                                        Connecter avec Stripe
-                                        <ExternalLink className="h-4 w-4 ml-2" />
-                                    </>
-                                )}
-                            </Button>
-                        </div>
-                    )}
-                </CardContent>
-            </Card>
+            {/* STRIPE */}
+            <SettingsSection
+                title="Configuration Stripe"
+                description="Connectez votre compte Stripe pour recevoir les paiements"
+                icon={<CreditCard className="w-5 h-5" />}
+            >
+                <div className="grid gap-4">
+                    <SettingsInput
+                        label="Clé Publishable"
+                        helperText="Commence par pk_test_ en mode test"
+                    >
+                        <Input
+                            placeholder="pk_test_51..."
+                            value={stripeKeys.publishable}
+                            onChange={(e) => setStripeKeys({ ...stripeKeys, publishable: e.target.value })}
+                            className="font-mono text-sm"
+                        />
+                    </SettingsInput>
+
+                    <SettingsInput
+                        label="Clé Secrète"
+                        helperText="Commence par sk_test_ en mode test"
+                    >
+                        <Input
+                            type="password"
+                            placeholder="sk_test_51..."
+                            value={stripeKeys.secret}
+                            onChange={(e) => setStripeKeys({ ...stripeKeys, secret: e.target.value })}
+                            className="font-mono text-sm"
+                        />
+                    </SettingsInput>
+
+                    <SettingsInput
+                        label="Client ID Connect"
+                        helperText="Commence par ca_"
+                    >
+                        <Input
+                            placeholder="ca_..."
+                            value={stripeKeys.connectClientId}
+                            onChange={(e) => setStripeKeys({ ...stripeKeys, connectClientId: e.target.value })}
+                            className="font-mono text-sm"
+                        />
+                    </SettingsInput>
+                </div>
+
+                <Collapsible open={showGuide} onOpenChange={setShowGuide}>
+                    <CollapsibleTrigger asChild>
+                        <Button variant="ghost" size="sm" className="w-full justify-between text-slate-500 hover:text-slate-900 hover:bg-slate-50 border border-transparent hover:border-slate-200 mt-2">
+                            <span>Comment trouver ces clés ?</span>
+                            <ChevronDown className={`w-4 h-4 transition-transform duration-200 ${showGuide ? 'rotate-180' : ''}`} />
+                        </Button>
+                    </CollapsibleTrigger>
+                    <CollapsibleContent className="space-y-3 pt-4 animate-in slide-in-from-top-2">
+                        <SettingsCollapsible title="1. Obtenir les clés API">
+                            <ol className="list-decimal list-inside space-y-1 ml-2">
+                                <li>Allez sur <a href="https://dashboard.stripe.com/test/apikeys" target="_blank" className="text-indigo-600 hover:underline">dashboard.stripe.com</a></li>
+                                <li>Activez le <strong>mode Test</strong> en haut à droite</li>
+                                <li>Allez dans <strong>Developers → API Keys</strong></li>
+                                <li>Copiez la clé Publishable et la clé Secrète</li>
+                            </ol>
+                        </SettingsCollapsible>
+
+                        <SettingsCollapsible title="2. Obtenir le Client ID Connect">
+                            <ol className="list-decimal list-inside space-y-1 ml-2">
+                                <li>Allez dans <strong>Connect → Settings</strong></li>
+                                <li>Activez Connect si nécessaire</li>
+                                <li>Copiez le <strong>Client ID</strong> en bas de page</li>
+                            </ol>
+                        </SettingsCollapsible>
+                    </CollapsibleContent>
+                </Collapsible>
+
+                <div className="flex justify-end pt-6 border-t border-slate-100 mt-6">
+                    <SettingsButton
+                        onClick={handleSave}
+                        disabled={loading || !stripeKeys.publishable || !stripeKeys.secret}
+                        variant="primary"
+                    >
+                        {loading ? 'Sauvegarde...' : <div className="flex items-center"><Check className="mr-2 w-4 h-4" /> Sauvegarder</div>}
+                    </SettingsButton>
+                </div>
+            </SettingsSection>
+
+            {/* DOMAINE */}
+            <SettingsSection
+                title="Domaine personnalisé"
+                description="Connectez votre propre nom de domaine (Ex: formation.mon-site.com)"
+                icon={<Globe className="w-5 h-5" />}
+            >
+                <SettingsInput
+                    label="Nom de domaine"
+                    helperText="Cette fonctionnalité sera bientôt disponible"
+                >
+                    <Input
+                        placeholder="maformation.com"
+                        disabled
+                        className="bg-slate-50 border-slate-200 text-slate-400 cursor-not-allowed"
+                    />
+                </SettingsInput>
+            </SettingsSection>
         </div>
     )
 }

@@ -70,7 +70,7 @@ export default function RegisterPage() {
 
     return (
         <div>
-            <h2 className="text-2xl font-bold text-gray-900">Créer un compte</h2>
+            <h2 className="text-xl sm:text-2xl font-bold text-gray-900">Créer un compte</h2>
             <p className="mt-2 text-sm text-gray-600">
                 Déjà inscrit ?{' '}
                 <Link

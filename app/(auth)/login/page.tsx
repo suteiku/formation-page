@@ -52,7 +52,7 @@ export default function LoginPage() {
 
     return (
         <div>
-            <h2 className="text-2xl font-bold text-gray-900">Connexion</h2>
+            <h2 className="text-xl sm:text-2xl font-bold text-gray-900">Connexion</h2>
             <p className="mt-2 text-sm text-gray-600">
                 Pas encore de compte ?{' '}
                 <Link
